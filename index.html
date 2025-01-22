@@ -3,17 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A-Frame Example</title>
+    <title>My VR Game:)</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
 </head>
 <body>
     <a-scene>
-        <a-box position="0 0.6 -3" rotation="0 45 45" color="#2E8B57" animation="property: position; to: 4 0 -2; dur: 100000; easing: linear; loop: true"></a-box>
-        <a-sphere position="0.3 2.3 -2" rotation="45 0 45" color="#4B0082" radius="0.2" animation="property: position; to: 1 2 -4; dur: 100000; easing: linear; loop: true"></a-sphere>
-        <a-cylinder position="-1.3 -0.7 -4" rotation="90 30 0" color="#FF1493" height="1.7" animation="property: position; to: -3 -3 4; dur: 100000; easing: linear; loop: true"></a-cylinder>
+        <!-- Окружение --!>
+        <a-sky color="#87ceeb"></a-sky>
+        <a-ground color="#228B22"></a-ground>
         <a-light position="0 1 1" rotation="0 0 0" color="#FFD700"></a-light>
-        <a-text position="0 1 -1" value="Chocolate isn't to blame" color="#1E90FF"></a-text>
+        
+        <!-- Контролер и камера --!>
+        <a-entity camera look-control position="0 1.7 0></a-entity>
+        
+        <!-- Очки и таймер --!>
+        <a-text value="Score:" position="0 2.5 0" color="#F0FFFF"></a-text>
+        <a-text id="Timer" value="Time:60" position="0 2.3 0" color="#F0FFFF"></a-text>
+
+        <!-- Обьекты --!>
+        <a-box position="2 0 -3" rotation="0 45 45" color="#2E8B57"></a-box>
+        <a-sphere position="0.7 0 -2" rotation="45 0 45" color="#4B0082" radius="0.2"></a-sphere>
+        <a-cylinder position="-1.3 0 -4" rotation="90 30 0" color="#FF1493" height="1.7"></a-cylinder>
         
     </a-scene>
+
+    <script>
+
+    </script>
 </body>
 </html>
