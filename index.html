@@ -8,86 +8,66 @@
 </head>
 <body>
     <a-scene>
-        <!-- Окружение --!>
+        <!-- Окружение -->
         <a-sky color="#87ceeb"></a-sky>
-        <a-plane width="20" height="20" color="#228B22"></a-plane>
+        <a-plane rotation="-90 0 0" position="0 0 0" width="40" height="40" color="#228B22"></a-plane>
         <a-light position="0 1 1" rotation="0 0 0" color="#FFD700"></a-light>
-        
-        <!-- Контролер и камера --!>
-        <a-entity camera look-control position="0 1.7 0></a-entity>
-        
-        <!-- Очки и таймер --!>
-        <a-text value="Score:" position="0 2.5 0" color="#F0FFFF"></a-text>
+
+        <!-- Контролер и камера -->
+        <a-entity id="player" camera position="0 1.7 0" wasd-controls look-controls></a-entity>
+
+        <!-- Очки и таймер -->
+        <a-text value="Score:0" position="0 2.5 0" color="#F0FFFF"></a-text>
         <a-text id="Timer" value="Time:60" position="0 2.3 0" color="#F0FFFF"></a-text>
 
-        <!-- Обьекты --!>
-        <a-box position="2 0 -3" rotation="0 45 45" color="#2E8B57"></a-box>
-        <a-sphere position="0.7 0 -2" rotation="45 0 45" color="#4B0082" radius="0.2"></a-sphere>
-        <a-cylinder position="-1.3 0 -4" rotation="90 30 0" color="#FF1493" height="1.7"></a-cylinder>
+        <!-- Обьекты -->
+        <a-box position="6 0.7 13" rotation="0 45 45" color="#2E8B57"></a-box>
+        <a-sphere position="9.7 0.5 -2" rotation="45 0 45" color="#4B0082" radius="0.2"></a-sphere>
+        <a-cylinder position="-10.3 1 -14" rotation="90 30 0" color="#FF1493" height="1.7"></a-cylinder>
     </a-scene>
 
     <script>
-      AFRAME.registerComponent('wasd-controls', {
+        AFRAME.registerComponent('wasd-controls', {
             schema: {
                 acceleration: {default: 100}
             },
             init: function () {
                 this.velocity = new THREE.Vector3();
+                this.keys = {};
+                window.addEventListener('keydown', this.onKeyDown.bind(this));
+                window.addEventListener('keyup', this.onKeyUp.bind(this));
             },
             tick: function (time, timeDelta) {
                 if (!timeDelta) { return; }
-                const el = this.el;
                 const directionVector = new THREE.Vector3();
-                const rotation = el.getAttribute('rotation');
-                const position = el.getAttribute('position');
 
-                if (AFRAME.utils.device.isMobile()) { return; }
-
-                if (this.data.fly) {
-                    directionVector.set(0, 0, 0);
-                    if (this.keys['KeyW'] || this.keys['ArrowUp']) { directionVector.z = -1; }
-                    if (this.keys['KeyS'] || this.keys['ArrowDown']) { directionVector.z = 1; }
-                    if (this.keys['KeyA'] || this.keys['ArrowLeft']) { directionVector.x = -1; }
-                    if (this.keys['KeyD'] || this.keys['ArrowRight']) { directionVector.x = 1; }
-                } else {
-                    directionVector.set(0, 0, 0);
-                    if (this.keys['KeyW'] || this.keys['ArrowUp']) { directionVector.z = -1; }
-                    if (this.keys['KeyS'] || this.keys['ArrowDown']) { directionVector.z = 1; }
-                    if (this.keys['KeyA'] || this.keys['ArrowLeft']) { directionVector.x = -1; }
-                    if (this.keys['KeyD'] || this.keys['ArrowRight']) { directionVector.x = 1; }
-                }
+                if (this.keys['KeyW'] || this.keys['ArrowUp']) { directionVector.z = -1; }
+                if (this.keys['KeyS'] || this.keys['ArrowDown']) { directionVector.z = 1; }
+                if (this.keys['KeyA'] || this.keys['ArrowLeft']) { directionVector.x = -1; }
+                if (this.keys['KeyD'] || this.keys['ArrowRight']) { directionVector.x = 1; }
 
                 directionVector.normalize();
                 directionVector.multiplyScalar(this.data.acceleration * timeDelta / 1000);
                 this.velocity.add(directionVector);
 
-                el.object3D.translateX(this.velocity.x);
-                el.object3D.translateY(this.velocity.y);
-                el.object3D.translateZ(this.velocity.z);
+                this.el.object3D.translateX(this.velocity.x);
+                this.el.object3D.translateZ(this.velocity.z);
 
-                el.setAttribute('position', {
-                    x: el.object3D.position.x,
-                    y: el.object3D.position.y,
-                    z: el.object3D.position.z
+                this.el.setAttribute('position', {
+                    x: this.el.object3D.position.x,
+                    y: this.el.object3D.position.y,
+                    z: this.el.object3D.position.z
                 });
+
+                this.velocity.set(0, 0, 0);
             },
-            keydown: function (event) {
-                this.keys = this.keys || {};
+            onKeyDown: function (event) {
                 this.keys[event.code] = true;
             },
-            keyup: function (event) {
-                this.keys = this.keys || {};
+            onKeyUp: function (event) {
                 this.keys[event.code] = false;
             }
         });
-
-        document.querySelector('#player').addEventListener('keydown', function (event) {
-            this.components['wasd-controls'].keydown(event);
-        }.bind(this));
-
-        document.querySelector('#player').addEventListener('keyup', function (event) {
-            this.components['wasd-controls'].keyup(event);
-        }.bind(this));
     </script>
 </body>
 </html>
