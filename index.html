@@ -16,13 +16,19 @@
         <a-light position="0 1 1" rotation="0 0 0" color="#FFD700"></a-light>
 
         <!-- Контролер и камера -->
-        <a-entity id="player" camera position="0 1.7 0" wasd-controls look-controls>
+        <a-entity id="player" camera position="0 1.7 0" look-controls>
             <a-cursor position="0 0 -1" color="#F5FFFA"></a-cursor>
+            <a-entity raycaster="objects: .collidable" cursor="fuse: true; fuseTimeout: 1500" position="0 0 -1" geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03" material="color: black; shader: flat"></a-entity>
         </a-entity>
+
+        <!-- VR контроллеры -->
+        <a-entity id="leftHand" laser-controls="hand: left" tracked-controls="controller: 0"></a-entity>
+        <a-entity id="rightHand" laser-controls="hand: right" tracked-controls="controller: 1"></a-entity>
 
         <!-- Очки и таймер -->
         <a-text id="ScoreBar" value="Score:0" position="0 2.5 -2" color="#F0FFFF"></a-text>
         <a-text id="Timer" value="Time:60" position="0 2.3 -2" color="#F0FFFF"></a-text>
+        <a-text id="GameOver" value="Игра окончена" position="0 2.1 -2" color="#F0FFFF" visible="false"></a-text>
 
         <!-- Обьекты -->
         <a-box position="6 1 13" rotation="0 45 45" color="#2E8B57" class="collidable"></a-box>
@@ -79,6 +85,7 @@
         // Таймер
         let timeLeft = 60;
         const timerElement = document.getElementById('Timer');
+        const gameOverElement = document.getElementById('GameOver');
 
         function updateTimer() {
             if (timeLeft > 0) {
@@ -88,6 +95,7 @@
                 clearInterval(timerInterval);
                 timerElement.setAttribute('value', 'Time:0');
                 disableMovement();
+                endGame();
             }
         }
 
@@ -97,58 +105,98 @@
             const player = document.getElementById('player');
             player.removeAttribute('wasd-controls');
         }
+
+        function endGame() {
+            // Удаляем все объекты с классом collidable
+            document.querySelectorAll('.collidable').forEach(el => {
+                el.parentNode.removeChild(el);
+            });
+
+            // Возвращаем игрока в исходное положение
+            const player = document.getElementById('player');
+            player.setAttribute('position', { x: 0, y: 1.7, z: 0 });
+
+            // Показываем надпись "Игра окончена"
+            gameOverElement.setAttribute('visible', true);
+        }
     </script>
 
-   <script class="ScoreSystem" data-script-id="S1">
-    AFRAME.registerComponent('proximity-check', {
-        schema: {
-            playerId: { type: 'string', default: 'player' }, // ID игрока
-            range: { type: 'number', default: 1 } // Радиус, в котором объект засчитывается
-        },
-        init: function () {
-            this.player = document.getElementById(this.data.playerId); // Получаем элемент игрока
-        },
-        tick: function () {
-            if (!this.player) return;
+    <script class="ScoreSystem" data-script-id="S1">
+        AFRAME.registerComponent('proximity-check', {
+            schema: {
+                playerId: { type: 'string', default: 'player' }, // ID игрока
+                range: { type: 'number', default: 1 } // Радиус, в котором объект засчитывается
+            },
+            init: function () {
+                this.player = document.getElementById(this.data.playerId); // Получаем элемент игрока
+            },
+            tick: function () {
+                if (!this.player) return;
 
-            // Получаем позиции объекта и игрока
-            const objectPosition = this.el.object3D.position;
-            const playerPosition = this.player.object3D.position;
+                // Получаем позиции объекта и игрока
+                const objectPosition = this.el.object3D.position;
+                const playerPosition = this.player.object3D.position;
 
-            // Вычисляем расстояние между объектом и игроком
-            const distance = objectPosition.distanceTo(playerPosition);
+                // Вычисляем расстояние между объектом и игроком
+                const distance = objectPosition.distanceTo(playerPosition);
 
-            // Если игрок достаточно близко, засчитываем объект
-            if (distance <= this.data.range) {
-                this.collect();
+                // Если игрок достаточно близко, засчитываем объект
+                if (distance <= this.data.range) {
+                    this.collect();
+                }
+            },
+            collect: function () {
+                this.el.setAttribute('visible', false); // Скрываем объект
+                updateScore(); // Обновляем очки
+                respawnCollectible(this.el); // Респавним объект
             }
-        },
-        collect: function () {
-            this.el.setAttribute('visible', false); // Скрываем объект
-            updateScore(); // Обновляем очки
-            respawnCollectible(this.el); // Респавним объект
+        });
+
+        let score = 0;
+
+        function updateScore() {
+            score += 1;
+            document.querySelector('#ScoreBar').setAttribute('value', 'Score: ' + score);
         }
-    });
 
-    let score = 0;
+        function respawnCollectible(collectible) {
+            const x = (Math.random() - 0.5) * 20; // Случайная позиция по X
+            const z = (Math.random() - 0.5) * 20; // Случайная позиция по Z
+            collectible.setAttribute('position', { x: x, y: 1, z: z }); // Устанавливаем новую позицию
+            collectible.setAttribute('visible', true); // Делаем объект видимым
+        }
 
-    function updateScore() {
-        score += 1;
-        document.querySelector('#ScoreBar').setAttribute('value', 'Score: ' + score);
-    }
+        // Добавляем компонент proximity-check ко всем объектам с классом collidable
+        document.querySelectorAll('.collidable').forEach(el => {
+            el.setAttribute('proximity-check', '');
+        });
+    </script>
 
-    function respawnCollectible(collectible) {
-        const x = (Math.random() - 0.5) * 20; // Случайная позиция по X
-        const z = (Math.random() - 0.5) * 20; // Случайная позиция по Z
-        collectible.setAttribute('position', { x: x, y: 1, z: z }); // Устанавливаем новую позицию
-        collectible.setAttribute('visible', true); // Делаем объект видимым
-    }
+    <script>
+        // Добавляем обработчик событий для контроллеров
+        AFRAME.registerComponent('controller-listener', {
+            init: function () {
+                const leftHand = document.getElementById('leftHand');
+                const rightHand = document.getElementById('rightHand');
 
-    // Добавляем компонент proximity-check ко всем объектам с классом collidable
-    document.querySelectorAll('.collidable').forEach(el => {
-        el.setAttribute('proximity-check', '');
-    });
-</script>
+                leftHand.addEventListener('abuttondown', this.onButtonDown.bind(this));
+                rightHand.addEventListener('abuttondown', this.onButtonDown.bind(this));
+            },
+            onButtonDown: function (event) {
+                if (event.detail.id === 'triggerdown') {
+                    const intersectedElement = event.detail.intersectedEl;
+                    if (intersectedElement && intersectedElement.classList.contains('collidable')) {
+                        intersectedElement.setAttribute('visible', false); // Скрываем объект
+                        updateScore(); // Обновляем очки
+                        respawnCollectible(intersectedElement); // Респавним объект
+                    }
+                }
+            }
+        });
+
+        // Добавляем компонент controller-listener к сцене
+        document.querySelector('a-scene').setAttribute('controller-listener', '');
+    </script>
 
 </body>
 </html>
