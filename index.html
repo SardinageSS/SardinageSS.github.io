@@ -198,5 +198,40 @@
         document.querySelector('a-scene').setAttribute('controller-listener', '');
     </script>
 
+    <script>
+        // Компонент для управления движением с помощью VR контроллеров
+        AFRAME.registerComponent('vr-movement', {
+            init: function () {
+                const leftHand = document.getElementById('leftHand');
+                const rightHand = document.getElementById('rightHand');
+
+                leftHand.addEventListener('thumbstickmoved', this.onThumbstickMoved.bind(this));
+                rightHand.addEventListener('thumbstickmoved', this.onThumbstickMoved.bind(this));
+            },
+            onThumbstickMoved: function (event) {
+                const player = document.getElementById('player');
+                const directionVector = new THREE.Vector3();
+
+                directionVector.x = event.detail.x;
+                directionVector.z = -event.detail.y;
+
+                directionVector.normalize();
+                directionVector.multiplyScalar(0.1); // Скорость движения
+
+                player.object3D.translateX(directionVector.x);
+                player.object3D.translateZ(directionVector.z);
+
+                player.setAttribute('position', {
+                    x: player.object3D.position.x,
+                    y: player.object3D.position.y,
+                    z: player.object3D.position.z
+                });
+            }
+        });
+
+        // Добавляем компонент vr-movement к сцене
+        document.querySelector('a-scene').setAttribute('vr-movement', '');
+    </script>
+
 </body>
 </html>
